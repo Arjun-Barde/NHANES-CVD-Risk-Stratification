@@ -1,112 +1,126 @@
-# NHANES CVD Risk Stratification
+# CVD Risk Stratification — NHANES 2017–2020
+### Health Equity Analysis with Survey-Weighted Statistics, ML Modeling, and SHAP Explainability
 
-Cardiovascular disease symptom risk stratification using NHANES 2017–2020 federal survey data. Merges 6 XPT files across 4 NHANES components, engineers clinical features, benchmarks 4 ML classifiers, and applies SHAP explainability to identify key predictors of CVD symptoms in U.S. adults aged 40+.
-
----
-
-## Project Overview
-
-| | |
-|---|---|
-| **Dataset** | CDC NHANES 2017–March 2020 Pre-Pandemic Public Use Files |
-| **Population** | 6,429 adults aged 40+ (nationally representative U.S. sample) |
-| **Target** | CVD symptom — chest pain on exertion (CDQ001, positive rate: 29.5%) |
-| **Features** | 22 features including 4 engineered interaction terms |
-| **Best Model** | Random Forest (Test AUC = 0.6935) |
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://nhanes-cvd-risk.streamlit.app)
 
 ---
 
-## SHAP Feature Importance
+## Overview
 
-![SHAP Beeswarm](shap_beeswarm.png)
+This project applies machine learning to CDC NHANES 2017–March 2020 Pre-Pandemic data to predict cardiovascular disease (CVD) symptoms in U.S. adults aged 40+, with a focus on **health equity** — examining how social determinants of health (SDOH), specifically income-to-poverty ratio, independently drive CVD risk across demographic groups.
 
-**Top predictors by mean |SHAP|:**
-
-| Feature | Mean \|SHAP\| | Clinical Interpretation |
-|---|---|---|
-| `sob` | 0.0916 | Shortness of breath — dominant predictor; correlated cardiopulmonary symptom |
-| `race_eth_NH_Asian` | 0.0145 | Race/ethnicity differential in CVD symptom reporting |
-| `income_pir` | 0.0131 | Lower income independently associated with higher symptom risk |
-| `bmi_x_diabetes` | 0.0089 | Compounded metabolic risk: obesity + diabetes interaction |
-| `age_x_diabetes` | 0.0074 | Age amplifies diabetes-associated CVD symptom risk |
+Unlike typical student ML projects, this analysis:
+- Applies **survey weights** (`WTMECPRP`) to produce nationally representative estimates
+- Performs **stratified subgroup AUC analysis** by race/ethnicity and income — diagnosing where model performance degrades for specific populations
+- Uses **SHAP interaction analysis** to quantify how income modifies CVD risk across age groups
+- Presents findings through an **interactive Streamlit dashboard**
 
 ---
 
-## Model Comparison
+## Dataset
 
-![Model Comparison](model_comparison.png)
+**Source:** [CDC NHANES 2017–March 2020 Pre-Pandemic Public Use Files](https://wwwn.cdc.gov/nchs/nhanes/continuousnhanes/default.aspx?Cycle=2017-2020)
 
-| Model | CV AUC | Test AUC |
-|---|---|---|
-| Logistic Regression | 0.6968 | 0.6879 |
-| **Random Forest** | **0.7001** | **0.6935** |
-| XGBoost (tuned) | 0.6865 | 0.6747 |
-| MLP Neural Network | 0.5977 | 0.5831 |
+| File | Component | Key Variables |
+|------|-----------|---------------|
+| P_DEMO.XPT | Demographics | Age, sex, race/ethnicity, income-to-poverty ratio, survey weights |
+| P_CDQ.XPT | Cardiovascular Health | Chest pain on exertion (target), shortness of breath |
+| P_BMX.XPT | Body Measures | BMI, waist circumference |
+| P_BPXO.XPT | Blood Pressure | Systolic BP, diastolic BP |
+| P_TCHOL.XPT | Total Cholesterol | Total cholesterol (mg/dL) |
+| P_DIQ.XPT | Diabetes | Diabetes diagnosis |
 
-All models evaluated with 5-fold stratified cross-validation + 80/20 held-out test split.
+**Final dataset:** N = 6,429 adults aged 40+ after merging and cleaning
 
 ---
 
 ## Methods
 
-**Data & Preprocessing**
-- Merged 6 NHANES XPT files on participant ID (SEQN): demographics, body measures, blood pressure, cholesterol, diabetes questionnaire, and CVD symptom questionnaire
-- Restricted to adults 40+ (CDQ administration criteria), yielding N=6,429
-- Median imputation for continuous variables with missingness (BP ~17%, cholesterol ~14%, BMI ~10%)
-- One-hot encoded race/ethnicity across 5 categories
+### Feature Engineering
+- 4 clinical flag features: hypertension (SBP >= 130), obesity (BMI >= 30), high cholesterol (>= 200 mg/dL), pulse pressure
+- 4 interaction terms: age × sex, age × diabetes, SBP × cholesterol, BMI × diabetes
+- Race/ethnicity dummy encoding (5 categories)
 
-**Feature Engineering**
-- `pulse_pressure` — SBP minus DBP, a clinical arterial stiffness marker
-- `age_x_diabetes` — interaction term: age × diabetes diagnosis
-- `bmi_x_diabetes` — interaction term: BMI × diabetes diagnosis  
-- `sbp_x_chol` — interaction term: systolic BP × total cholesterol
-- Binary clinical flags: `hypertension` (SBP ≥ 130), `obese` (BMI ≥ 30), `high_chol` (≥ 200 mg/dL)
+### Models
+| Model | CV AUC | Test AUC |
+|-------|--------|----------|
+| Logistic Regression | — | 0.6879 |
+| Random Forest | — | 0.6938 |
+| XGBoost (tuned) | — | 0.6764 |
 
-**Explainability**
-- SHAP TreeExplainer applied to Random Forest for patient-level prediction attribution
-- Shortness of breath emerged as the dominant predictor (mean |SHAP| = 0.0916), with income and metabolic interaction terms as secondary drivers
+### Survey-Weighted Analysis
+NHANES uses complex multistage probability sampling. All prevalence statistics use `WTMECPRP` sample weights — unweighted analysis would misrepresent the U.S. population by overrepresenting certain demographic groups by design.
 
 ---
 
 ## Key Findings
 
-- Shortness of breath was by far the strongest predictor of CVD symptom risk — consistent with clinical literature on correlated cardiopulmonary presentations
-- Income-to-poverty ratio was a significant social determinant — lower income independently drove higher symptom probability
-- Engineered interaction terms (BMI × diabetes, age × diabetes) contributed meaningful predictive signal beyond raw features
-- Random Forest outperformed tuned XGBoost, likely reflecting the moderate sample size and mixed feature types in NHANES survey data
+**Health Equity**
+- Survey-weighted CVD symptom prevalence varies significantly across race/ethnicity and income groups
+- Income-to-poverty ratio (`income_pir`) is a top SHAP predictor — SDOH independently predicts CVD risk beyond clinical variables
+- Subgroup AUC analysis reveals performance gaps for specific demographic groups, highlighting where the model is less reliable
+
+**SHAP Interaction Analysis**
+- Low-income individuals show higher SHAP contributions from `income_pir` toward CVD risk regardless of age
+- The income × age interaction demonstrates that poverty amplifies age-related CVD risk in older adults
 
 ---
 
-## Data Sources
+## Visualizations
 
-All data publicly available from CDC NHANES — no registration required:  
-https://wwwn.cdc.gov/nchs/nhanes/continuousnhanes/default.aspx?Cycle=2017-2020
-
-| File | Component | Contents |
-|---|---|---|
-| P_DEMO.XPT | Demographics | Age, sex, race/ethnicity, income, survey weights |
-| P_BMX.XPT | Examination | BMI, waist circumference |
-| P_BPXO.XPT | Examination | Systolic and diastolic blood pressure |
-| P_TCHOL.XPT | Laboratory | Total cholesterol |
-| P_DIQ.XPT | Questionnaire | Diabetes diagnosis |
-| P_CDQ.XPT | Questionnaire | CVD symptom questionnaire (target variable) |
-
-> XPT files are not included in this repo. Download from CDC and place in a `data/` folder before running the notebook.
+| | |
+|---|---|
+| ![Equity Heatmap](equity_heatmap.png) | ![Subgroup AUC](subgroup_auc.png) |
+| Survey-weighted CVD prevalence by race × income | Model performance equity diagnostic |
+| ![SHAP Interactions](shap_interactions.png) | ![ROC Curves](roc_curves.png) |
+| SDOH × clinical risk interaction (SHAP) | ROC curves — all models |
 
 ---
 
-## Setup
+## Interactive Dashboard
 
+The Streamlit dashboard provides four interactive views:
+- **Health Equity** — survey-weighted prevalence charts and race × income heatmap
+- **Model Performance** — ROC curves and subgroup AUC equity diagnostics
+- **SHAP Analysis** — feature importance and income/age interaction plots
+- **Risk Calculator** — input patient characteristics, get predicted CVD probability
+
+The dashboard downloads NHANES data directly from CDC on first load — no local files needed.
+
+**To run locally:**
 ```bash
-pip install pandas numpy scikit-learn xgboost shap matplotlib seaborn jupyter
+pip install -r requirements.txt
+streamlit run nhanes_dashboard.py
 ```
 
-Download the 6 XPT files from CDC (links above) into a `data/` folder, then open and run `nhanes_cvd_risk_stratification.ipynb`.
+---
+
+## Repository Structure
+
+```
+NHANES-CVD-Risk-Stratification/
+├── nhanes_cvd_risk_stratification.ipynb   # Full analysis notebook
+├── nhanes_dashboard.py                    # Streamlit dashboard
+├── requirements.txt                       # Python dependencies
+├── equity_heatmap.png                     # Race × income prevalence heatmap
+├── subgroup_auc.png                       # Subgroup AUC equity analysis
+├── shap_beeswarm.png                      # SHAP beeswarm plot
+├── shap_bar.png                           # SHAP feature importance bar
+├── shap_interactions.png                  # SHAP interaction analysis
+├── roc_curves.png                         # ROC curves all models
+└── README.md
+```
+
+---
+
+## Tech Stack
+
+Python, pandas, NumPy, scikit-learn, XGBoost, SHAP, Matplotlib, Seaborn, Streamlit
 
 ---
 
 ## Author
 
-**Arjun Barde**  
-M.S. Health Informatics & Data Science, University of Pittsburgh  
-linkedin.com/in/arjun-barde-2224473b5
+**Arjun Barde**
+M.S. Health Informatics (Data Science), University of Pittsburgh
+[linkedin.com/in/arjun-barde-2224473b5](https://linkedin.com/in/arjun-barde-2224473b5)
