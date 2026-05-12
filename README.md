@@ -1,14 +1,14 @@
 # CVD Risk Stratification — NHANES 2017–2020
 ### Health Equity Analysis with Survey-Weighted Statistics, ML Modeling, and SHAP Explainability
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://nhanes-cvd-risk.streamlit.app)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://nhanes-cvd-risk-stratification-go8vilgnfmeywaisetwudc.streamlit.app/)
 
 ---
 
 ## Overview
 
 This project applies machine learning to CDC NHANES 2017–March 2020 Pre-Pandemic data to predict cardiovascular disease (CVD) symptoms in U.S. adults aged 40+, with a focus on **health equity** — examining how social determinants of health (SDOH), specifically income-to-poverty ratio, independently drive CVD risk across demographic groups.
-
+This Analysis:
 - Applies **survey weights** (`WTMECPRP`) to produce nationally representative estimates
 - Performs **stratified subgroup AUC analysis** by race/ethnicity and income — diagnosing where model performance degrades for specific populations
 - Uses **SHAP interaction analysis** to quantify how income modifies CVD risk across age groups
@@ -83,6 +83,8 @@ The Streamlit dashboard provides four interactive views:
 - **Model Performance** — ROC curves and subgroup AUC equity diagnostics
 - **SHAP Analysis** — feature importance and income/age interaction plots
 - **Risk Calculator** — input patient characteristics, get predicted CVD probability
+
+**Live dashboard:** [nhanes-cvd-risk-stratification-go8vilgnfmeywaisetwudc.streamlit.app](https://nhanes-cvd-risk-stratification-go8vilgnfmeywaisetwudc.streamlit.app/)
 
 The dashboard downloads NHANES data directly from CDC on first load — no local files needed.
 
