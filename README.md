@@ -9,7 +9,6 @@
 
 This project applies machine learning to CDC NHANES 2017–March 2020 Pre-Pandemic data to predict cardiovascular disease (CVD) symptoms in U.S. adults aged 40+, with a focus on **health equity** — examining how social determinants of health (SDOH), specifically income-to-poverty ratio, independently drive CVD risk across demographic groups.
 
-Unlike typical student ML projects, this analysis:
 - Applies **survey weights** (`WTMECPRP`) to produce nationally representative estimates
 - Performs **stratified subgroup AUC analysis** by race/ethnicity and income — diagnosing where model performance degrades for specific populations
 - Uses **SHAP interaction analysis** to quantify how income modifies CVD risk across age groups
